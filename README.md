@@ -11,7 +11,7 @@ In contrast to an (S)LC kernel, it is lightweight and provides the newest
 features wrt virtualization and memory management techniques.
 
 Features:
-  * Based on 3.6 vanilla
+  * Based on vanilla sources
   * (Paravirtualized) device drivers for
      KVM, Xen, VMware, VirtualBox, and HyperV
   * Boots an SL6 OS and possibly other distributions
@@ -25,6 +25,7 @@ Features:
     - ext2-4, XFS, Btrfs (module), NTFS (module), Fuse (module)
     - NFS 3, 4, 4.1
     - LVM / device mapper
+    - OpenAFS (module, patched in by EC build system)
 
 Kernel, Ramdisk, and modules are 10MB--20MB in size, compared to >100MB of SL6.
 After boot, it occupies ~25MB less memory than the SL6 kernel.

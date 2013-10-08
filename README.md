@@ -23,6 +23,7 @@ Features:
     - (All) cgroup controllers
     - Aufs3 (patched from aufs upstream)
     - ext2-4, XFS, Btrfs (module), NTFS (module), Fuse (module)
+    - Rados block device, CephFS (module)
     - NFS 3, 4, 4.1
     - LVM / device mapper
     - OpenAFS (module, patched in by EC build system)

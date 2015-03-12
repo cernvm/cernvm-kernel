@@ -7,7 +7,9 @@ all: $(BUILD)/linux-built \
 	$(BUILD)/firmware-built \
 	$(BUILD)/headers-built \
 	$(BUILD)/vbox-unpacked \
-	$(BUILD)/vbox-built
+	$(BUILD)/vbox-built \
+	$(BUILD)/afs-built \
+	$(BUILD)/depmod-built
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -15,6 +17,17 @@ $(BUILD):
 $(SRC):
 	mkdir -p $(SRC)
 
+
+$(BUILD)/afs-built: $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko
+	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs
+	cp $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko \
+	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs/openafs-$(AFS_VERSION).ko
+	ln -s openafs-$(AFS_VERSION).ko $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs/openafs.ko
+	touch $(BUILD)/afs-built
+
+$(BUILD)/afs-unpacked: $(SRC)/$(AFS_TARBALL) | $(BUILD)
+	cd $(BUILD) && tar xvfj $(SRC)/$(AFS_TARBALL)
+	touch $(BUILD)/afs-unpacked
 
 $(BUILD)/aufs-cloned: | $(BUILD)
 	git clone -b $(AUFS_BRANCH) $(AUFS_GIT) $(SRC)/aufs
@@ -39,8 +52,12 @@ $(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz
 	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
 	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.xz
 
+$(BUILD)/depmod-built: $(BUILD)/vbox-built $(BUILD)/afs-built
+	depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
+	touch $(BUILD)/depmod-built
+
 $(BUILD)/linux-built: $(KERN_DIR)/arch/x86/boot/bzImage.xz
-	touch $(BUILT)/linux-built
+	touch $(BUILD)/linux-built
 
 $(BUILD)/linux-unpacked: $(SRC)/$(LINUX_TARBALL) | $(BUILD)
 	cd $(BUILD) && tar xvfJ $(SRC)/$(LINUX_TARBALL)
@@ -62,6 +79,12 @@ $(BUILD)/modules-built: $(BUILD)/linux-built
 	ln -s /usr/src/kernels/$(CVM_KERNEL_VERSION) $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
 	touch $(BUILD)/modules-built
 
+$(BUILD)/openafs-$(AFS_VERSION)/Makefile: $(BUILD)/afs-unpacked $(BUILD)/linux-built
+	cd $(BUILD)/openafs-$(AFS_VERSION) && ./configure --with-linux-kernel-packaging --with-linux-kernel-headers=$(KERN_DIR)
+
+$(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko: $(BUILD)/openafs-$(AFS_VERSION)/Makefile
+	$(MAKE) -C $(BUILD)/openafs-$(AFS_VERSION)
+
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
 
@@ -81,7 +104,6 @@ $(BUILD)/vbox-built: \
 	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
 	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc/
-	depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/vbox-built 
 
 $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
@@ -96,8 +118,11 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2		
 	touch $(BUILD)/vbox-unpacked
 
+$(SRC)/$(AFS_TARBALL): | $(SRC)
+	curl -L -o $(SRC)/$(AFS_TARBALL) $(AFS_URL)
+
 $(SRC)/$(LINUX_TARBALL): | $(SRC)
-	curl -o $(SRC)/$(LINUX_TARBALL) $(LINUX_URL)
+	curl -L -o $(SRC)/$(LINUX_TARBALL) $(LINUX_URL)
 
 $(SRC)/$(VBOX_ISO): | $(SRC)
 	curl -L -o $(SRC)/$(VBOX_ISO) $(VBOX_URL)

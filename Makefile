@@ -2,106 +2,107 @@
 TOP = $(shell pwd)
 include params.mk
 
-all: build/linux-built \
-	build/modules-built \
-	build/firmware-built \
-	build/headers-built \
-	build/vbox-unpacked \
-	build/vbox-built
+all: $(BUILD)/linux-built \
+	$(BUILD)/modules-built \
+	$(BUILD)/firmware-built \
+	$(BUILD)/headers-built \
+	$(BUILD)/vbox-unpacked \
+	$(BUILD)/vbox-built
 
-src:
-	mkdir -p src
+$(BUILD):
+	mkdir -p $(BUILD)
 
-build:
-	mkdir -p build
+$(SRC):
+	mkdir -p $(SRC)
 
 
-build/aufs-cloned: | build
-	git clone -b $(AUFS_BRANCH) $(AUFS_GIT) build/aufs
-	touch build/aufs-cloned
+$(BUILD)/aufs-cloned: | $(BUILD)
+	git clone -b $(AUFS_BRANCH) $(AUFS_GIT) $(SRC)/aufs
+	touch $(BUILD)/aufs-cloned
 
-build/aufs-patched: build/aufs-cloned build/linux-unpacked
-	cd build/linux-$(LINUX_VERSION) && patch -p1 < ../aufs/aufs3-kbuild.patch
-	cd build/linux-$(LINUX_VERSION) && patch -p1 < ../aufs/aufs3-base.patch
-	cd build/linux-$(LINUX_VERSION) && patch -p1 < ../aufs/aufs3-mmap.patch
-	cp build/aufs/include/uapi/linux/aufs_type.h build/linux-$(LINUX_VERSION)/include/uapi/linux/
-	cp build/aufs/Documentation/ABI/testing/* build/linux-$(LINUX_VERSION)/Documentation/ABI/testing/
-	cp -r build/aufs/Documentation/filesystems/aufs build/linux-$(LINUX_VERSION)/Documentation/filesystems/
-	cp -r build/aufs/fs/aufs build/linux-$(LINUX_VERSION)/fs/
-	touch build/aufs-patched
+$(BUILD)/aufs-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
+	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-kbuild.patch
+	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-base.patch
+	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-mmap.patch
+	cp $(SRC)/aufs/include/uapi/linux/aufs_type.h $(KERN_DIR)/include/uapi/linux/
+	cp $(SRC)/aufs/Documentation/ABI/testing/* $(KERN_DIR)/Documentation/ABI/testing/
+	cp -r $(SRC)/aufs/Documentation/filesystems/aufs $(KERN_DIR)/Documentation/filesystems/
+	cp -r $(SRC)/aufs/fs/aufs $(KERN_DIR)/fs/
+	touch $(BUILD)/aufs-patched
 
-build/linux-$(LINUX_VERSION)/.config.xz: kconfig-cernvm build/aufs-patched
-	cp kconfig-cernvm build/linux-$(LINUX_VERSION)/.config.xz
+$(KERN_DIR)/.config.xz: kconfig-cernvm $(BUILD)/aufs-patched
+	cp kconfig-cernvm $(KERN_DIR)/.config.xz
 
-build/linux-$(LINUX_VERSION)/arch/x86/boot/bzImage.xz: build/linux-$(LINUX_VERSION)/.config.xz
-	cp build/linux-$(LINUX_VERSION)/.config.xz build/linux-$(LINUX_VERSION)/.config
-	$(MAKE) -C build/linux-$(LINUX_VERSION) olddefconfig
-	$(MAKE) -C build/linux-$(LINUX_VERSION) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
-	mv build/linux-$(LINUX_VERSION)/arch/x86/boot/bzImage build/linux-$(LINUX_VERSION)/arch/x86/boot/bzImage.xz
+$(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz
+	cp $(KERN_DIR)/.config.xz $(KERN_DIR)/.config
+	$(MAKE) -C $(KERN_DIR) olddefconfig
+	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
+	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.xz
 
-build/linux-built: build/linux-$(LINUX_VERSION)/arch/x86/boot/bzImage.xz
-	touch build/linux-built
+$(BUILD)/linux-built: $(KERN_DIR)/arch/x86/boot/bzImage.xz
+	touch $(BUILT)/linux-built
 
-build/linux-unpacked: src/$(LINUX_TARBALL) | build
-	cd build && tar xvfJ ../src/$(LINUX_TARBALL)
-	touch build/linux-unpacked
+$(BUILD)/linux-unpacked: $(SRC)/$(LINUX_TARBALL) | $(BUILD)
+	cd $(BUILD) && tar xvfJ $(SRC)/$(LINUX_TARBALL)
+	touch $(BUILD)/linux-unpacked
 
-build/firmware-built: build/linux-built
-	$(MAKE) -C build/linux-$(LINUX_VERSION) INSTALL_FW_PATH=$(TOP)/build/firmware-$(LINUX_VERSION) firmware_install
-	touch build/firmware-built
+$(BUILD)/firmware-built: $(BUILD)/linux-built
+	$(MAKE) -C $(KERN_DIR) INSTALL_FW_PATH=$(BUILD)/firmware-$(LINUX_VERSION) firmware_install
+	touch $(BUILD)/firmware-built
 
-build/headers-built: build/linux-built
-	$(MAKE) -C build/linux-$(LINUX_VERSION) INSTALL_HDR_PATH=$(TOP)/build/headers-$(LINUX_VERSION) headers_install
-	touch build/headers-built
+$(BUILD)/headers-built: $(BUILD)/linux-built
+	$(MAKE) -C $(KERN_DIR) INSTALL_HDR_PATH=$(BUILD)/headers-$(LINUX_VERSION) headers_install
+	touch $(BUILD)/headers-built
 
-build/modules-built: build/linux-built
-	$(MAKE) -C build/linux-$(LINUX_VERSION) INSTALL_MOD_PATH=$(TOP)/build/modules-$(LINUX_VERSION) modules_install
-	rm -f build/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/source
-	rm -f build/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
-	ln -s build build/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/source
-	ln -s /usr/src/kernels/$(CVM_KERNEL_VERSION) build/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
-	touch build/modules-built
+$(BUILD)/modules-built: $(BUILD)/linux-built
+	$(MAKE) -C $(KERN_DIR) INSTALL_MOD_PATH=$(BUILD)/modules-$(LINUX_VERSION) modules_install
+	rm -f $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/source
+	rm -f $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
+	ln -s build $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/source
+	ln -s /usr/src/kernels/$(CVM_KERNEL_VERSION) $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
+	touch $(BUILD)/modules-built
 
-build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: build/vbox-unpacked build/linux-built
-	$(MAKE) -C build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(TOP)/build/linux-$(LINUX_VERSION)
+$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
 
-build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko: build/vbox-unpacked build/linux-built
-	$(MAKE) -C build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf KERN_DIR=$(TOP)/build/linux-$(LINUX_VERSION)
+$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)
 
-build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko: build/vbox-unpacked build/linux-built
-	$(MAKE) -C build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo KERN_DIR=$(TOP)/build/linux-$(LINUX_VERSION)
+$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
 
-build/vbox-built: \
-  build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko \
-  build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
-  build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
-  build/modules-built
-	mkdir -p build/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc
-	cp build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko \
-	  build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
-	  build/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
-	  build/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc/
-	touch build/vbox-built 
+$(BUILD)/vbox-built: \
+  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko \
+  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
+  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
+  $(BUILD)/modules-built
+	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc
+	cp $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko \
+	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
+	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
+	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc/
+	depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
+	touch $(BUILD)/vbox-built 
 
-build/vbox-unpacked: src/$(VBOX_ISO) | build
-	mkdir -p build/vbox-$(VBOX_VERSION)
-	cp src/$(VBOX_ISO) build/vbox-$(VBOX_VERSION)
-	cd build/vbox-$(VBOX_VERSION) && 7z x $(VBOX_ISO)
-	rm -f build/vbox-$(VBOX_VERSION)/$(VBOX_ISO)
-	chmod +x build/vbox-$(VBOX_VERSION)/VBoxLinuxAdditions.run
-	cd build/vbox-$(VBOX_VERSION) && ./VBoxLinuxAdditions.run --tar xvf
-	rm -f build/vbox-$(VBOX_VERSION)/VBoxLinuxAdditions.run
-	cd build/vbox-$(VBOX_VERSION) && tar xvfj VBoxGuestAdditions-amd64.tar.bz2
-	rm -f build/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2		
-	touch build/vbox-unpacked
+$(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
+	mkdir -p $(BUILD)/vbox-$(VBOX_VERSION)
+	cp $(SRC)/$(VBOX_ISO) $(BUILD)/vbox-$(VBOX_VERSION)
+	cd $(BUILD)/vbox-$(VBOX_VERSION) && 7z x $(VBOX_ISO)
+	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/$(VBOX_ISO)
+	chmod +x $(BUILD)/vbox-$(VBOX_VERSION)/VBoxLinuxAdditions.run
+	cd $(BUILD)/vbox-$(VBOX_VERSION) && ./VBoxLinuxAdditions.run --tar xvf
+	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxLinuxAdditions.run
+	cd $(BUILD)/vbox-$(VBOX_VERSION) && tar xvfj VBoxGuestAdditions-amd64.tar.bz2
+	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2		
+	touch $(BUILD)/vbox-unpacked
 
-src/$(LINUX_TARBALL): | src
-	curl -o src/$(LINUX_TARBALL) $(LINUX_URL)
+$(SRC)/$(LINUX_TARBALL): | $(SRC)
+	curl -o $(SRC)/$(LINUX_TARBALL) $(LINUX_URL)
 
-src/$(VBOX_ISO): | src
-	curl -L -o src/$(VBOX_ISO) $(VBOX_URL)
+$(SRC)/$(VBOX_ISO): | $(SRC)
+	curl -L -o $(SRC)/$(VBOX_ISO) $(VBOX_URL)
 
 
 clean:
-	rm -rf build/*
+	rm -rf $(BUILD)*
 

@@ -5,6 +5,10 @@ LINUX_URL = https://www.kernel.org/pub/linux/kernel/v3.x/$(LINUX_TARBALL)
 AUFS_BRANCH = aufs3.18.1+
 AUFS_GIT = git://git.code.sf.net/p/aufs/aufs3-standalone
 
+VBOX_VERSION = 4.3.24
+VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso
+VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)
+
 CVM_KERNEL_ARCH = x86_64
 CVM_KERNEL_RELEASE = $(shell cat release)
 CVM_KERNEL_LOCALVERSION = -$(CVM_KERNEL_RELEASE).cernvm.$(CVM_KERNEL_ARCH)

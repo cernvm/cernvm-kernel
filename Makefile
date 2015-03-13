@@ -4,7 +4,9 @@
 # Builds a vanilla kernel with aufs patches and
 #   - OpenAFS
 #   - VirtualBox Guest Additions
-#   - VMware tools
+#   - VMware tools (which need to be patched)
+#
+# Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
 # 
 # Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, 7pzip
 #

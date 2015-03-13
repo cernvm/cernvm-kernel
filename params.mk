@@ -13,6 +13,10 @@ VBOX_VERSION = 4.3.24
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso
 VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)
 
+VMTOOLS_VERSION = 9.4.6-1770165
+VMTOOLS_TARBALL = open-vm-tools-$(VMTOOLS_VERSION).tar.gz
+VMTOOLS_URL = https://ecsft.cern.ch/dist/cernvm/$(VMTOOLS_TARBALL)
+
 CVM_KERNEL_ARCH = x86_64
 CVM_KERNEL_RELEASE = $(shell cat release)
 CVM_KERNEL_LOCALVERSION = -$(CVM_KERNEL_RELEASE).cernvm.$(CVM_KERNEL_ARCH)

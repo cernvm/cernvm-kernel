@@ -1,15 +1,18 @@
+###############################################################################
+# Build system for the CernVM kernel.
+#
+# Builds a vanilla kernel with aufs patches and
+#   - OpenAFS
+#   - VirtualBox Guest Additions
+#   - VMware tools
+# 
+#
+###############################################################################
 
 TOP = $(shell pwd)
 include params.mk
 
-all: $(BUILD)/linux-built \
-	$(BUILD)/modules-built \
-	$(BUILD)/firmware-built \
-	$(BUILD)/headers-built \
-	$(BUILD)/vbox-unpacked \
-	$(BUILD)/vbox-built \
-	$(BUILD)/afs-built \
-	$(BUILD)/depmod-built
+all: $(BUILD)/depmod-built
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -33,7 +36,7 @@ $(BUILD)/aufs-cloned: | $(BUILD)
 	git clone -b $(AUFS_BRANCH) $(AUFS_GIT) $(SRC)/aufs
 	touch $(BUILD)/aufs-cloned
 
-$(BUILD)/aufs-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
+$(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-mmap.patch
@@ -41,9 +44,9 @@ $(BUILD)/aufs-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cp $(SRC)/aufs/Documentation/ABI/testing/* $(KERN_DIR)/Documentation/ABI/testing/
 	cp -r $(SRC)/aufs/Documentation/filesystems/aufs $(KERN_DIR)/Documentation/filesystems/
 	cp -r $(SRC)/aufs/fs/aufs $(KERN_DIR)/fs/
-	touch $(BUILD)/aufs-patched
+	touch $(BUILD)/linux-patched
 
-$(KERN_DIR)/.config.xz: kconfig-cernvm $(BUILD)/aufs-patched
+$(KERN_DIR)/.config.xz: kconfig-cernvm $(BUILD)/linux-unpacked
 	cp kconfig-cernvm $(KERN_DIR)/.config.xz
 
 $(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz
@@ -52,16 +55,9 @@ $(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz
 	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
 	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.xz
 
-$(BUILD)/depmod-built: $(BUILD)/vbox-built $(BUILD)/afs-built
+$(BUILD)/depmod-built: $(BUILD)/vbox-built $(BUILD)/afs-built $(BUILD)/vmtools-built
 	depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/depmod-built
-
-$(BUILD)/linux-built: $(KERN_DIR)/arch/x86/boot/bzImage.xz
-	touch $(BUILD)/linux-built
-
-$(BUILD)/linux-unpacked: $(SRC)/$(LINUX_TARBALL) | $(BUILD)
-	cd $(BUILD) && tar xvfJ $(SRC)/$(LINUX_TARBALL)
-	touch $(BUILD)/linux-unpacked
 
 $(BUILD)/firmware-built: $(BUILD)/linux-built
 	$(MAKE) -C $(KERN_DIR) INSTALL_FW_PATH=$(BUILD)/firmware-$(LINUX_VERSION) firmware_install
@@ -70,6 +66,13 @@ $(BUILD)/firmware-built: $(BUILD)/linux-built
 $(BUILD)/headers-built: $(BUILD)/linux-built
 	$(MAKE) -C $(KERN_DIR) INSTALL_HDR_PATH=$(BUILD)/headers-$(LINUX_VERSION) headers_install
 	touch $(BUILD)/headers-built
+
+$(BUILD)/linux-built: $(KERN_DIR)/arch/x86/boot/bzImage.xz
+	touch $(BUILD)/linux-built
+
+$(BUILD)/linux-unpacked: $(SRC)/$(LINUX_TARBALL) | $(BUILD)
+	cd $(BUILD) && tar xvfJ $(SRC)/$(LINUX_TARBALL)
+	touch $(BUILD)/linux-unpacked
 
 $(BUILD)/modules-built: $(BUILD)/linux-built
 	$(MAKE) -C $(KERN_DIR) INSTALL_MOD_PATH=$(BUILD)/modules-$(LINUX_VERSION) modules_install
@@ -84,6 +87,12 @@ $(BUILD)/openafs-$(AFS_VERSION)/Makefile: $(BUILD)/afs-unpacked $(BUILD)/linux-b
 
 $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko: $(BUILD)/openafs-$(AFS_VERSION)/Makefile
 	$(MAKE) -C $(BUILD)/openafs-$(AFS_VERSION)
+
+$(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure: $(BUILD)/vmtools-unpacked
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
+
+$(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko: $(BUILD)/vmtools-patched
+	$(MAKE) -C $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules
 
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
@@ -118,6 +127,37 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2		
 	touch $(BUILD)/vbox-unpacked
 
+$(BUILD)/vmtools-built: \
+  $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko \
+  $(BUILD)/modules-built
+	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
+	cp $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko \
+	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
+	touch $(BUILD)/vmtools-built
+
+$(BUILD)/vmtools-configured: $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && \
+	  ./configure --disable-multimon --disable-docs --disable-tests \
+	    --without-gtk2 --without-gtkmm --without-x --without-pam --without-procps --without-dnet --without-icu \
+	    --with-kernel-release=$(CVM_KERNEL_VERSION) --with-linuxdir=$(KERN_DIR)
+	touch $(BUILD)/vmtools-configured
+
+$(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0001-Remove-unused-DEPRECATED-macro.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0002-Conditionally-define-g_info-macro.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0003-Add-kuid_t-kgid_t-compatibility-layer.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0004-Use-new-link-helpers.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0005-Update-hgfs-file-operations-for-newer-kernels.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0006-Fix-vmxnet-module-on-kernels-3.16.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0007-Fix-vmhgfs-module-on-kernels-3.16.patch
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0008-Fix-segfault-in-vmhgfs.patch
+	sed -i -e 's/^MODULES = .*/MODULES = vmhgfs/' $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/Makefile
+	touch $(BUILD)/vmtools-patched
+
+$(BUILD)/vmtools-unpacked: $(SRC)/$(VMTOOLS_TARBALL) | $(BUILD)
+	cd $(BUILD) && tar xvfz  $(SRC)/$(VMTOOLS_TARBALL)
+	touch $(BUILD)/vmtools-unpacked
+
 $(SRC)/$(AFS_TARBALL): | $(SRC)
 	curl -L -o $(SRC)/$(AFS_TARBALL) $(AFS_URL)
 
@@ -127,6 +167,8 @@ $(SRC)/$(LINUX_TARBALL): | $(SRC)
 $(SRC)/$(VBOX_ISO): | $(SRC)
 	curl -L -o $(SRC)/$(VBOX_ISO) $(VBOX_URL)
 
+$(SRC)/$(VMTOOLS_TARBALL): | $(SRC)
+	curl -L -o $(SRC)/$(VMTOOLS_TARBALL) $(VMTOOLS_URL)
 
 clean:
 	rm -rf $(BUILD)*

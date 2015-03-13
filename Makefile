@@ -12,7 +12,9 @@
 TOP = $(shell pwd)
 include params.mk
 
-all: $(BUILD)/depmod-built
+all: $(BUILD)/firmware-built \
+  $(BUILD)/headers-built \
+  $(BUILD)/depmod-built
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -21,7 +23,9 @@ $(SRC):
 	mkdir -p $(SRC)
 
 
-$(BUILD)/afs-built: $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko
+$(BUILD)/afs-built: \
+  $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko \
+  $(BUILD)/modules-built
 	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs
 	cp $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs/openafs-$(AFS_VERSION).ko
@@ -91,6 +95,13 @@ $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/open
 $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure: $(BUILD)/vmtools-unpacked
 	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
 
+$(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/Makefile: $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure $(BUILD)/linux-built
+	ln -sf . $(KERN_DIR)/build
+	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && \
+	  ./configure --disable-multimon --disable-docs --disable-tests \
+	    --without-gtk2 --without-gtkmm --without-x --without-pam --without-procps --without-dnet --without-icu \
+	    --with-kernel-release=$(CVM_KERNEL_VERSION) --with-linuxdir=$(KERN_DIR)
+
 $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko: $(BUILD)/vmtools-patched
 	$(MAKE) -C $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules
 
@@ -135,14 +146,7 @@ $(BUILD)/vmtools-built: \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
 	touch $(BUILD)/vmtools-built
 
-$(BUILD)/vmtools-configured: $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && \
-	  ./configure --disable-multimon --disable-docs --disable-tests \
-	    --without-gtk2 --without-gtkmm --without-x --without-pam --without-procps --without-dnet --without-icu \
-	    --with-kernel-release=$(CVM_KERNEL_VERSION) --with-linuxdir=$(KERN_DIR)
-	touch $(BUILD)/vmtools-configured
-
-$(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
+$(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/Makefile
 	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0001-Remove-unused-DEPRECATED-macro.patch
 	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0002-Conditionally-define-g_info-macro.patch
 	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0003-Add-kuid_t-kgid_t-compatibility-layer.patch

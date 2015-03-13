@@ -6,21 +6,40 @@
 #   - VirtualBox Guest Additions
 #   - VMware tools
 # 
+# Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, 7pzip
 #
 ###############################################################################
 
 TOP = $(shell pwd)
 include params.mk
 
-all: $(BUILD)/firmware-built \
+all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
+
+$(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz: \
+  $(BUILD)/linux-built \
+  $(BUILD)/awskernel-built \
+  $(BUILD)/firmware-built \
   $(BUILD)/headers-built \
-  $(BUILD)/depmod-built
+  $(BUILD)/depmod-built \
+  | $(DIST)
+	mkdir $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)
+	cp $(KERN_DIR)/arch/x86/boot/bzImage.xz $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).xz
+	cp $(KERN_DIR)/arch/x86/boot/bzImage.gzip $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).gzip
+	cp -av $(BUILD)/modules-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/modules-$(LINUX_VERSION)
+	cp -av $(BUILD)/headers-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/headers-$(LINUX_VERSION)
+	cp -av $(BUILD)/firmware-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/firmware-$(LINUX_VERSION)
+	cd $(DIST) && tar cfvz cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz cernvm-kernel-$(CVM_KERNEL_VERSION)
+	rm -rf $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)
+	
 
 $(BUILD):
 	mkdir -p $(BUILD)
 
 $(SRC):
 	mkdir -p $(SRC)
+
+$(DIST):
+	mkdir -p $(DIST)
 
 
 $(BUILD)/afs-built: \
@@ -44,6 +63,9 @@ $(BUILD)/aufs-cloned: | $(BUILD)
 	fi
 	touch $(BUILD)/aufs-cloned
 
+$(BUILD)/awskernel-built: $(KERN_DIR)/arch/x86/boot/bzImage.gzip
+	touch $(BUILD)/awskernel-built
+
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-base.patch
@@ -54,8 +76,19 @@ $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cp -r $(SRC)/aufs/fs/aufs $(KERN_DIR)/fs/
 	touch $(BUILD)/linux-patched
 
+$(KERN_DIR)/.config.gzip: kconfig-cernvm $(BUILD)/linux-unpacked
+	sed -e 's/CONFIG_KERNEL_XZ=y//' kconfig-cernvm > $(KERN_DIR)/.config.gzip.tmp
+	echo CONFIG_KERNEL_GZIP=y >> $(KERN_DIR)/.config.gzip.tmp
+	mv $(KERN_DIR)/.config.gzip.tmp $(KERN_DIR)/.config.gzip
+
 $(KERN_DIR)/.config.xz: kconfig-cernvm $(BUILD)/linux-unpacked
 	cp kconfig-cernvm $(KERN_DIR)/.config.xz
+
+$(KERN_DIR)/arch/x86/boot/bzImage.gzip: $(KERN_DIR)/.config.gzip $(BUILD)/linux-built
+	cp $(KERN_DIR)/.config.gzip $(KERN_DIR)/.config
+	$(MAKE) -C $(KERN_DIR) olddefconfig
+	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
+	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.gzip
 
 $(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz $(BUILD)/linux-patched
 	cp $(KERN_DIR)/.config.xz $(KERN_DIR)/.config

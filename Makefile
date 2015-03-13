@@ -37,7 +37,11 @@ $(BUILD)/afs-unpacked: $(SRC)/$(AFS_TARBALL) | $(BUILD)
 	touch $(BUILD)/afs-unpacked
 
 $(BUILD)/aufs-cloned: | $(BUILD)
-	git clone -b $(AUFS_BRANCH) $(AUFS_GIT) $(SRC)/aufs
+	if [ -d $(SRC)/aufs ]; then \
+	  cd $(SRC)/aufs && git pull; \
+	else \
+	  git clone -b $(AUFS_BRANCH) $(AUFS_GIT) $(SRC)/aufs; \
+	fi
 	touch $(BUILD)/aufs-cloned
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
@@ -53,7 +57,7 @@ $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 $(KERN_DIR)/.config.xz: kconfig-cernvm $(BUILD)/linux-unpacked
 	cp kconfig-cernvm $(KERN_DIR)/.config.xz
 
-$(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz
+$(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz $(BUILD)/linux-patched
 	cp $(KERN_DIR)/.config.xz $(KERN_DIR)/.config
 	$(MAKE) -C $(KERN_DIR) olddefconfig
 	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)

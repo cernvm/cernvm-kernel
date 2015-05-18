@@ -20,6 +20,7 @@ all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
 $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz: \
   $(BUILD)/linux-built \
   $(BUILD)/awskernel-built \
+  $(BUILD)/modules-built \
   $(BUILD)/firmware-built \
   $(BUILD)/headers-built \
   $(BUILD)/depmod-built \

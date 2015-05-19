@@ -70,7 +70,7 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/x86/boot/bzImage.gzip
 	touch $(BUILD)/awskernel-built
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
-	cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
+	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-mmap.patch

@@ -101,7 +101,7 @@ $(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz $(BUILD)/linux-patc
 	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.xz
 
 $(BUILD)/depmod-built: $(BUILD)/vbox-built $(BUILD)/afs-built $(BUILD)/vmtools-built
-	depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
+	/sbin/depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/depmod-built
 
 $(BUILD)/firmware-built: $(BUILD)/linux-built

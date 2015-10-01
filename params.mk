@@ -6,8 +6,8 @@ AFS_VERSION = 1.6.11.1
 AFS_TARBALL = openafs-$(AFS_VERSION)-src.tar.bz2
 AFS_URL = http://www.openafs.org/dl/openafs/$(AFS_VERSION)/$(AFS_TARBALL)
 
-AUFS_BRANCH = aufs3.18.1+
-AUFS_GIT = https://github.com/cernvm/aufs3-standalone.git
+AUFS_BRANCH = aufs4.1
+AUFS_GIT = https://github.com/cernvm/aufs4-standalone.git
 
 VBOX_VERSION = 4.3.28
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso

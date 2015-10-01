@@ -368,9 +368,9 @@
  		acpi_bus_generate_netlink_event(device->pnp.device_class,
  						  dev_name(&device->dev), event, 0);
  		break;
---- drivers/acpi/sbs.c.orig	2015-03-06 23:53:42.000000000 +0100
-+++ drivers/acpi/sbs.c	2015-05-19 10:14:46.055001595 +0200
-@@ -604,8 +604,14 @@
+--- sbs.c.orig	2015-10-01 21:40:00.578631507 +0200
++++ sbs.c	2015-10-01 21:43:20.414635894 +0200
+@@ -618,8 +618,14 @@
  
  	if (sbs->charger_exists) {
  		acpi_ac_get_present(sbs);
@@ -381,22 +381,22 @@
 +			                              ACPI_SBS_NOTIFY_STATUS,
 +			                              sbs->charger_present);
 +#endif
- 			kobject_uevent(&sbs->charger.dev->kobj, KOBJ_CHANGE);
+ 			kobject_uevent(&sbs->charger->dev.kobj, KOBJ_CHANGE);
 +		}
  	}
  
  	if (sbs->manager_present) {
-@@ -617,6 +623,12 @@
+@@ -631,6 +637,12 @@
  			acpi_battery_read(bat);
  			if (saved_battery_state == bat->present)
  				continue;
 +#ifdef CONFIG_ACPI_PROC_EVENT
 +			acpi_bus_generate_proc_event4(ACPI_BATTERY_CLASS,
-+						      bat->name,
-+						      ACPI_SBS_NOTIFY_STATUS,
-+						      bat->present);
++			                              bat->name,
++			                              ACPI_SBS_NOTIFY_STATUS,
++			                              bat->present);
 +#endif
- 			kobject_uevent(&bat->bat.dev->kobj, KOBJ_CHANGE);
+ 			kobject_uevent(&bat->bat->dev.kobj, KOBJ_CHANGE);
  		}
  	}
 --- drivers/acpi/thermal.c.orig	2015-03-06 23:53:42.000000000 +0100

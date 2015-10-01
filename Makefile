@@ -71,9 +71,9 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/x86/boot/bzImage.gzip
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
-	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-kbuild.patch
-	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-base.patch
-	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs3-mmap.patch
+	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-kbuild.patch
+	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-base.patch
+	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-mmap.patch
 	cp $(SRC)/aufs/include/uapi/linux/aufs_type.h $(KERN_DIR)/include/uapi/linux/
 	cp $(SRC)/aufs/Documentation/ABI/testing/* $(KERN_DIR)/Documentation/ABI/testing/
 	cp -r $(SRC)/aufs/Documentation/filesystems/aufs $(KERN_DIR)/Documentation/filesystems/

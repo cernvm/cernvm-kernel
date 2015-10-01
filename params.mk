@@ -1,6 +1,6 @@
-LINUX_VERSION = 3.18.20
+LINUX_VERSION = 4.1.9
 LINUX_TARBALL = linux-$(LINUX_VERSION).tar.xz
-LINUX_URL = https://www.kernel.org/pub/linux/kernel/v3.x/$(LINUX_TARBALL)
+LINUX_URL = https://www.kernel.org/pub/linux/kernel/v4.x/$(LINUX_TARBALL)
 
 AFS_VERSION = 1.6.11.1
 AFS_TARBALL = openafs-$(AFS_VERSION)-src.tar.bz2

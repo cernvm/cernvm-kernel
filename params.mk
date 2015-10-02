@@ -1,4 +1,4 @@
-LINUX_VERSION = 3.18.18
+LINUX_VERSION = 3.18.20
 LINUX_TARBALL = linux-$(LINUX_VERSION).tar.xz
 LINUX_URL = https://www.kernel.org/pub/linux/kernel/v3.x/$(LINUX_TARBALL)
 
@@ -7,7 +7,7 @@ AFS_TARBALL = openafs-$(AFS_VERSION)-src.tar.bz2
 AFS_URL = http://www.openafs.org/dl/openafs/$(AFS_VERSION)/$(AFS_TARBALL)
 
 AUFS_BRANCH = aufs3.18.1+
-AUFS_GIT = git://git.code.sf.net/p/aufs/aufs3-standalone
+AUFS_GIT = https://github.com/cernvm/aufs3-standalone.git
 
 VBOX_VERSION = 4.3.28
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso

@@ -1,0 +1,101 @@
+From 5c1237432edf4600111845d175c92252430d5f76 Mon Sep 17 00:00:00 2001
+From: Marc Dionne <marc.dionne@your-file-system.com>
+Date: Mon, 20 Apr 2015 10:41:53 -0300
+Subject: [PATCH] Linux 4.1: Don't define or use ->write directly
+
+We no longer have to define a ->write operation, and we can't
+expect the underlying disk cache filesystem to have one.  Use
+the new __vfs_read/write helpers that will select the operation
+to use based on what's available for that particular filesystem.
+
+Change-Id: Iab923235308ff57348ffc2dc6d718dd64040656b
+Reviewed-on: http://gerrit.openafs.org/11849
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Chas Williams <3chas3@gmail.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Jeffrey Altman <jaltman@your-file-system.com>
+---
+ acinclude.m4                 |    3 +++
+ src/afs/LINUX/osi_compat.h   |   20 ++++++++++++++++++++
+ src/afs/LINUX/osi_file.c     |    4 ++--
+ src/afs/LINUX/osi_vnodeops.c |    2 ++
+ 4 files changed, 27 insertions(+), 2 deletions(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index f82248c..959e3c5 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -966,6 +966,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
+ 
+ 		 dnl Function existence checks
+ 
++		 AC_CHECK_LINUX_FUNC([__vfs_read],
++				     [#include <linux/fs.h>],
++				     [__vfs_read(NULL, NULL, 0, NULL);])
+                  AC_CHECK_LINUX_FUNC([bdi_init],
+ 				     [#include <linux/backing-dev.h>],
+ 				     [bdi_init(NULL);])
+diff --git a/src/afs/LINUX/osi_compat.h b/src/afs/LINUX/osi_compat.h
+index e8816d5..e9f6ca1 100644
+--- a/src/afs/LINUX/osi_compat.h
++++ b/src/afs/LINUX/osi_compat.h
+@@ -631,4 +631,24 @@ afs_d_invalidate(struct dentry *dp)
+ #endif
+ }
+ 
++static inline int
++afs_file_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
++{
++#if defined(HAVE_LINUX___VFS_READ)
++    return __vfs_read(filp, buf, len, pos);
++#else
++    return filp->f_op->read(filp, buf, len, pos);
++#endif
++}
++
++static inline int
++afs_file_write(struct file *filp, char __user *buf, size_t len, loff_t *pos)
++{
++#if defined(HAVE_LINUX___VFS_READ)
++    return __vfs_write(filp, buf, len, pos);
++#else
++    return filp->f_op->write(filp, buf, len, pos);
++#endif
++}
++
+ #endif /* AFS_LINUX_OSI_COMPAT_H */
+diff --git a/src/afs/LINUX/osi_file.c b/src/afs/LINUX/osi_file.c
+index 8cdff4b..c050715 100644
+--- a/src/afs/LINUX/osi_file.c
++++ b/src/afs/LINUX/osi_file.c
+@@ -375,9 +375,9 @@ osi_rdwr(struct osi_file *osifile, struct uio *uiop, int rw)
+ 
+ 	pos = uiop->uio_offset;
+ 	if (rw == UIO_READ)
+-	    code = filp->f_op->read(filp, iov->iov_base, count, &pos);
++	    code = afs_file_read(filp, iov->iov_base, count, &pos);
+ 	else
+-	    code = filp->f_op->write(filp, iov->iov_base, count, &pos);
++	    code = afs_file_write(filp, iov->iov_base, count, &pos);
+ 
+ 	if (code < 0) {
+ 	    code = -code;
+diff --git a/src/afs/LINUX/osi_vnodeops.c b/src/afs/LINUX/osi_vnodeops.c
+index 5869eb9..5b9d5aa 100644
+--- a/src/afs/LINUX/osi_vnodeops.c
++++ b/src/afs/LINUX/osi_vnodeops.c
+@@ -819,8 +819,10 @@ struct file_operations afs_file_fops = {
+ #ifdef STRUCT_FILE_OPERATIONS_HAS_READ_ITER
+   .read_iter =	afs_linux_read_iter,
+   .write_iter =	afs_linux_write_iter,
++# if !defined(HAVE_LINUX___VFS_READ)
+   .read =	new_sync_read,
+   .write =	new_sync_write,
++# endif
+ #elif defined(HAVE_LINUX_GENERIC_FILE_AIO_READ)
+   .aio_read =	afs_linux_aio_read,
+   .aio_write =	afs_linux_aio_write,
+-- 
+1.7.1
+
+

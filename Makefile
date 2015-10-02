@@ -54,6 +54,11 @@ $(BUILD)/afs-built: \
 	ln -s openafs-$(AFS_VERSION).ko $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs/openafs.ko
 	touch $(BUILD)/afs-built
 
+$(BUILD)/afs-patched: $(BUILD)/afs-unpacked
+	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1
+	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1
+	touch $(BUILD)/afs-patched
+
 $(BUILD)/afs-unpacked: $(SRC)/$(AFS_TARBALL) | $(BUILD)
 	cd $(BUILD) && tar xvfj $(SRC)/$(AFS_TARBALL)
 	touch $(BUILD)/afs-unpacked
@@ -127,7 +132,7 @@ $(BUILD)/modules-built: $(BUILD)/linux-built
 	ln -s /usr/src/kernels/$(CVM_KERNEL_VERSION) $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
 	touch $(BUILD)/modules-built
 
-$(BUILD)/openafs-$(AFS_VERSION)/Makefile: $(BUILD)/afs-unpacked $(BUILD)/linux-built
+$(BUILD)/openafs-$(AFS_VERSION)/Makefile: $(BUILD)/afs-patched $(BUILD)/linux-built
 	cd $(BUILD)/openafs-$(AFS_VERSION) && ./configure --with-linux-kernel-packaging --with-linux-kernel-headers=$(KERN_DIR)
 
 $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko: $(BUILD)/openafs-$(AFS_VERSION)/Makefile

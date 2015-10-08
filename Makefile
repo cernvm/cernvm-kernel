@@ -143,7 +143,7 @@ $(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools001-force-vmhgfs.patch
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools002-new_sync_read.patch
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools003-bdi.patch
-	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools && autoreconf -i
 	touch $(BUILD)/vmtools-patched
 
 $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile: $(BUILD)/vmtools-patched $(BUILD)/linux-built

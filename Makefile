@@ -55,7 +55,6 @@ $(BUILD)/afs-built: \
 	touch $(BUILD)/afs-built
 
 $(BUILD)/afs-patched: $(BUILD)/afs-unpacked
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs000-configure-libafs.patch
 	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1.patch
 	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1.patch
 	touch $(BUILD)/afs-patched

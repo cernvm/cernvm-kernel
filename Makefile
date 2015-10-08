@@ -10,7 +10,7 @@
 # 
 # Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, p7zip,
 #                        p7zip-plugins, patch, bzip2, autoconf, automake, 
-#                        libtool, bc, bison, byacc, flex
+#                        libtool, bc, bison, byacc, flex, glib2-devel
 #
 ###############################################################################
 

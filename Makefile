@@ -9,7 +9,8 @@
 # Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
 # 
 # Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, p7zip,
-#                        p7zip-plugins, patch, bzip2
+#                        p7zip-plugins, patch, bzip2, autoconf, automake, 
+#                        libtool, bc, bison, byacc, flex
 #
 ###############################################################################
 
@@ -146,9 +147,11 @@ $(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools && autoreconf -i
 	touch $(BUILD)/vmtools-patched
 
-$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile: $(BUILD)/vmtools-patched $(BUILD)/linux-built
+$(KERN_DIR)/build: $(BUILD)/linux-unpacked
 	ln -sf . $(KERN_DIR)/build
-	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && \
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile: $(BUILD)/vmtools-patched $(BUILD)/linux-built $(KERN_DIR)/build
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools && \
 	  ./configure --disable-multimon --disable-docs --disable-tests \
 	    --without-gtk2 --without-gtkmm --without-x --without-pam --without-procps --without-dnet --without-icu \
 	    --disable-deploypkg --disable-grabbitmqproxy --disable-vgauth \

@@ -4,7 +4,7 @@
 # Builds a vanilla kernel with aufs patches and
 #   - OpenAFS
 #   - VirtualBox Guest Additions
-#   - VMware tools (which need to be patched)
+#   - vmhgfs from open-vm-tools (which need to be patched)
 #
 # Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
 # 
@@ -138,18 +138,23 @@ $(BUILD)/openafs-$(AFS_VERSION)/Makefile: $(BUILD)/afs-patched $(BUILD)/linux-bu
 $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko: $(BUILD)/openafs-$(AFS_VERSION)/Makefile
 	$(MAKE) -C $(BUILD)/openafs-$(AFS_VERSION)
 
-$(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure: $(BUILD)/vmtools-unpacked
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
+$(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools001-force-vmhgfs.patch
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools002-new_sync_read.patch
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
+	touch $(BUILD)/vmtools-patched
 
-$(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/Makefile: $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/configure $(BUILD)/linux-built
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile: $(BUILD)/vmtools-patched $(BUILD)/linux-built
 	ln -sf . $(KERN_DIR)/build
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && \
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && \
 	  ./configure --disable-multimon --disable-docs --disable-tests \
 	    --without-gtk2 --without-gtkmm --without-x --without-pam --without-procps --without-dnet --without-icu \
+	    --disable-deploypkg --disable-grabbitmqproxy --disable-vgauth \
+	    --without-root-privileges --without-xerces --without-xmlsecurity --without-ssl --without-pam \
 	    --with-kernel-release=$(CVM_KERNEL_VERSION) --with-linuxdir=$(KERN_DIR)
 
-$(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko: $(BUILD)/vmtools-patched
-	$(MAKE) -C $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko: $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules
 
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
@@ -185,27 +190,15 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	touch $(BUILD)/vbox-unpacked
 
 $(BUILD)/vmtools-built: \
-  $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko \
   $(BUILD)/modules-built
 	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
-	cp $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/linux/vmhgfs/vmhgfs.ko \
+	cp $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
 	touch $(BUILD)/vmtools-built
 
-$(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/Makefile
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0001-Remove-unused-DEPRECATED-macro.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0002-Conditionally-define-g_info-macro.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0003-Add-kuid_t-kgid_t-compatibility-layer.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0004-Use-new-link-helpers.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0005-Update-hgfs-file-operations-for-newer-kernels.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0006-Fix-vmxnet-module-on-kernels-3.16.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0007-Fix-vmhgfs-module-on-kernels-3.16.patch
-	cd $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION) && patch -p2 < $(TOP)/patches/0008-Fix-segfault-in-vmhgfs.patch
-	sed -i -e 's/^MODULES = .*/MODULES = vmhgfs/' $(BUILD)/open-vm-tools-$(VMTOOLS_VERSION)/modules/Makefile
-	touch $(BUILD)/vmtools-patched
-
 $(BUILD)/vmtools-unpacked: $(SRC)/$(VMTOOLS_TARBALL) | $(BUILD)
-	cd $(BUILD) && tar xvfz  $(SRC)/$(VMTOOLS_TARBALL)
+	cd $(BUILD) && tar xvfz $(SRC)/$(VMTOOLS_TARBALL)
 	touch $(BUILD)/vmtools-unpacked
 
 $(SRC)/$(AFS_TARBALL): | $(SRC)

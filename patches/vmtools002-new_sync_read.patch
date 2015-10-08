@@ -1,0 +1,13 @@
+--- open-vm-tools/modules/linux/vmhgfs/file.c.orig      2015-08-28 15:56:56.000000000 +0200
++++ open-vm-tools/modules/linux/vmhgfs/file.c   2015-10-08 09:58:44.740512079 +0200
+@@ -169,8 +169,10 @@
+    .flush      = HgfsFlush,
+ #if defined VMW_USE_AIO
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)
++#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+    .read       = new_sync_read,
+    .write      = new_sync_write,
++#endif // LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
+    .read_iter  = HgfsFileRead,
+    .write_iter = HgfsFileWrite,
+ #else // LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0)

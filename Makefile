@@ -8,7 +8,8 @@
 #
 # Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
 # 
-# Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, 7pzip
+# Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, p7zip,
+#                        p7zip-plugins, patch, bzip2
 #
 ###############################################################################
 

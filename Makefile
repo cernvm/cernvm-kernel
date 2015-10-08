@@ -139,9 +139,9 @@ $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/open
 	$(MAKE) -C $(BUILD)/openafs-$(AFS_VERSION)
 
 $(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
-	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools001-force-vmhgfs.patch
-	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools002-new_sync_read.patch
-	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools003-bdi.patch
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools001-force-vmhgfs.patch
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools002-new_sync_read.patch
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools003-bdi.patch
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
 	touch $(BUILD)/vmtools-patched
 

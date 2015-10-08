@@ -55,8 +55,9 @@ $(BUILD)/afs-built: \
 	touch $(BUILD)/afs-built
 
 $(BUILD)/afs-patched: $(BUILD)/afs-unpacked
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1
+	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs000-configure-libafs.patch
+	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1.patch
+	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1.patch
 	touch $(BUILD)/afs-patched
 
 $(BUILD)/afs-unpacked: $(SRC)/$(AFS_TARBALL) | $(BUILD)
@@ -141,6 +142,7 @@ $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/open
 $(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools001-force-vmhgfs.patch
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools002-new_sync_read.patch
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch < $(TOP)/patches/vmtools003-bdi.patch
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && autoreconf -i
 	touch $(BUILD)/vmtools-patched
 

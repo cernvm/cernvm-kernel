@@ -1,0 +1,120 @@
+--- a/configure-libafs.orig	2015-10-08 11:50:39.833700509 +0200
++++ b/configure-libafs	2015-10-08 11:53:05.551703265 +0200
+@@ -13277,6 +13277,117 @@
+ 
+ 
+ 
++                   { $as_echo "$as_me:$LINENO: checking for __vfs_read" >&5
++$as_echo_n "checking for __vfs_read... " >&6; }
++if test "${ac_cv_linux_func___vfs_read+set}" = set; then
++  $as_echo_n "(cached) " >&6
++else
++  save_CPPFLAGS="$CPPFLAGS"
++     CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
++
++  if test $AFS_SYSKVERS -ge 26 ; then
++      rm -fr conftest.dir
++  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
++    CFLAGS_PREFIX='EXTRA_'
++  fi
++  if mkdir conftest.dir &&
++    cat >conftest.dir/Makefile <<_ACEOF &&
++${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
++
++obj-m += conftest.o
++_ACEOF
++    cat >conftest.dir/conftest.c <<\_ACEOF &&
++/* confdefs.h */
++_ACEOF
++    cat confdefs.h >>conftest.dir/conftest.c &&
++    cat >>conftest.dir/conftest.c <<\_ACEOF &&
++/* end confdefs.h */
++#include <linux/module.h>
++#include <linux/fs.h>
++
++void conftest(void)
++{
++__vfs_read(NULL, NULL, 0, NULL);
++}
++
++MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
++_ACEOF
++    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
++    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
++    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
++    then ac_cv_linux_func___vfs_read=yes
++    else
++      sed '/^ *+/d' conftest.err >&5
++      echo "$as_me: failed using Makefile:" >&5
++      sed 's/^/| /' conftest.dir/Makefile >&5
++      echo "$as_me: and program was:" >&5
++      sed 's/^/| /' conftest.dir/conftest.c >&5
++      ac_cv_linux_func___vfs_read=no
++  fi; rm -fr conftest.err conftest.dir
++  else
++
++  ac_save_CPPFLAGS="$CPPFLAGS"
++  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
++  cat >conftest.$ac_ext <<_ACEOF
++/* confdefs.h.  */
++_ACEOF
++cat confdefs.h >>conftest.$ac_ext
++cat >>conftest.$ac_ext <<_ACEOF
++/* end confdefs.h.  */
++
++#include <linux/kernel.h>
++#include <linux/fs.h>
++int
++main ()
++{
++__vfs_read(NULL, NULL, 0, NULL);
++  ;
++  return 0;
++}
++_ACEOF
++rm -f conftest.$ac_objext
++if { (ac_try="$ac_compile"
++case "(($ac_try" in
++  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
++  *) ac_try_echo=$ac_try;;
++esac
++eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
++$as_echo "$ac_try_echo") >&5
++  (eval "$ac_compile") 2>conftest.er1
++  ac_status=$?
++  grep -v '^ *+' conftest.er1 >conftest.err
++  rm -f conftest.er1
++  cat conftest.err >&5
++  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } && {
++         test -z "$ac_c_werror_flag" ||
++         test ! -s conftest.err
++       } && test -s conftest.$ac_objext; then
++  ac_cv_linux_func___vfs_read=yes
++else
++  $as_echo "$as_me: failed program was:" >&5
++sed 's/^/| /' conftest.$ac_ext >&5
++
++        ac_cv_linux_func___vfs_read=no
++fi
++
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++  CPPFLAGS="$ac_save_CPPFLAGS"
++  fi
++     CPPFLAGS="$save_CPPFLAGS"
++
++fi
++{ $as_echo "$as_me:$LINENO: result: $ac_cv_linux_func___vfs_read" >&5
++$as_echo "$ac_cv_linux_func___vfs_read" >&6; }
++  if test $ac_cv_linux_func___vfs_read = yes; then
++
++cat >>confdefs.h <<\_ACEOF
++#define HAVE_LINUX___VFS_READ 1
++_ACEOF
++
++fi
++
++
+ 
+                    { $as_echo "$as_me:$LINENO: checking for bdi_init" >&5
+ $as_echo_n "checking for bdi_init... " >&6; }

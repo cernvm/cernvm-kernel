@@ -1,4 +1,4 @@
-LINUX_VERSION = 3.18.20
+LINUX_VERSION = 3.18.21
 LINUX_TARBALL = linux-$(LINUX_VERSION).tar.xz
 LINUX_URL = https://www.kernel.org/pub/linux/kernel/v3.x/$(LINUX_TARBALL)
 

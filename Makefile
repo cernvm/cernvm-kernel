@@ -10,7 +10,8 @@
 # 
 # Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, p7zip,
 #                        p7zip-plugins, patch, bzip2, autoconf, automake, 
-#                        libtool, bc, bison, byacc, flex, glib2-devel
+#                        libtool, bc, bison, byacc, flex, glib2-devel, 
+#                        glibc-static
 #
 ###############################################################################
 
@@ -158,6 +159,43 @@ $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile: 
 	    --without-root-privileges --without-xerces --without-xmlsecurity --without-ssl --without-pam \
 	    --with-kernel-release=$(CVM_KERNEL_VERSION) --with-linuxdir=$(KERN_DIR)
 
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/string/libString.la: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/string
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/panicDefault/libPanicDefault.la: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/panicDefault
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/panic/libPanic.la: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/panic
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/lock/libLock.la: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/lock
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/misc/libMisc.la: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/misc
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/stubs/libStubs.la: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/stubs
+
+$(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/hgfsmounter/mount.vmhgfs: \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/stubs/libStubs.la \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/misc/libMisc.la \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/lock/libLock.la \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/panic/libPanic.la \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/panicDefault/libPanicDefault.la \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/lib/string/libString.la
+	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/hgfsmounter hgfsmounter.o
+	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/hgfsmounter && \
+	  gcc -static -g -O2 -Wall -Werror -Wno-pointer-sign -Wno-unused-value -fno-strict-aliasing -Wno-unknown-pragmas -Wno-uninitialized -Wno-deprecated-declarations -Wno-unused-but-set-variable -o mount.vmhgfs hgfsmounter.o  ../lib/string/.libs/libString.a ../lib/panicDefault/.libs/libPanicDefault.a ../lib/panic/.libs/libPanic.a ../lib/lock/.libs/libLock.a ../lib/misc/.libs/libMisc.a ../lib/stubs/.libs/libStubs.a /usr/lib64/libpthread.a
+	strip $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/hgfsmounter/mount.vmhgfs
+
 $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko: $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/Makefile
 	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules
 
@@ -196,9 +234,12 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 
 $(BUILD)/vmtools-built: \
   $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko \
+  $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/hgfsmounter/mount.vmhgfs \
   $(BUILD)/modules-built
 	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
 	cp $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko \
+	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
+	cp $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/hgfsmounter/mount.vmhgfs \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs
 	touch $(BUILD)/vmtools-built
 

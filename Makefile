@@ -18,7 +18,7 @@
 TOP = $(shell pwd)
 include params.mk
 
-ifeq ($(CVM_KERNEL_ARCH),ppcle64)
+ifeq ($(CVM_KERNEL_ARCH),ppc64le)
   CVM_GUEST_MODULES =
 else
   CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vmtools-built

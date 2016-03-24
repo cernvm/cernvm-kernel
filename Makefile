@@ -7,10 +7,10 @@
 #   - vmhgfs from open-vm-tools (which need to be patched)
 #
 # Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
-# 
+#
 # Requires (incomplete): make, gcc, gcc-c++, tar, xz, gzip, unzip, p7zip,
-#                        p7zip-plugins, patch, bzip2, autoconf, automake, 
-#                        libtool, bc, bison, byacc, flex, glib2-devel, 
+#                        p7zip-plugins, patch, bzip2, autoconf, automake,
+#                        libtool, bc, bison, byacc, flex, glib2-devel,
 #                        glibc-static
 #
 ###############################################################################
@@ -19,6 +19,29 @@ TOP = $(shell pwd)
 include params.mk
 
 all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
+
+install-buildreqs:
+	sudo yum -y install \
+	  autoconf \
+	  automake \
+	  bc \
+	  bison \
+	  byacc \
+	  bzip2 \
+	  flex \
+	  gcc \
+	  gcc-c++ \
+	  glib2-devel \
+	  glibc-static \
+	  gzip \
+	  libtool \
+	  make \
+	  tar \
+	  patch \
+	  p7zip \
+	  p7zip-plugins \
+	  unzip \
+	  xz
 
 $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz: \
   $(BUILD)/linux-built \
@@ -29,14 +52,16 @@ $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz: \
   $(BUILD)/depmod-built \
   | $(DIST)
 	mkdir $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)
-	cp $(KERN_DIR)/arch/x86/boot/bzImage.xz $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).xz
-	cp $(KERN_DIR)/arch/x86/boot/bzImage.gzip $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).gzip
+	cp $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz \
+	  $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).xz
+	cp $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).gzip \
+	  $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).gzip
 	cp -av $(BUILD)/modules-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/modules-$(LINUX_VERSION)
 	cp -av $(BUILD)/headers-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/headers-$(LINUX_VERSION)
 	cp -av $(BUILD)/firmware-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/firmware-$(LINUX_VERSION)
 	cd $(DIST) && tar cfvz cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz cernvm-kernel-$(CVM_KERNEL_VERSION)
 	rm -rf $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)
-	
+
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -74,7 +99,7 @@ $(BUILD)/aufs-cloned: | $(BUILD)
 	fi
 	touch $(BUILD)/aufs-cloned
 
-$(BUILD)/awskernel-built: $(KERN_DIR)/arch/x86/boot/bzImage.gzip
+$(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).gzip
 	touch $(BUILD)/awskernel-built
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
@@ -88,25 +113,27 @@ $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cp -r $(SRC)/aufs/fs/aufs $(KERN_DIR)/fs/
 	touch $(BUILD)/linux-patched
 
-$(KERN_DIR)/.config.gzip: kconfig-cernvm $(BUILD)/linux-unpacked
-	sed -e 's/CONFIG_KERNEL_XZ=y//' kconfig-cernvm > $(KERN_DIR)/.config.gzip.tmp
+$(KERN_DIR)/.config.gzip: kconfig-cernvm.$(CVM_KERNEL_ARCH) $(BUILD)/linux-unpacked
+	sed -e 's/CONFIG_KERNEL_XZ=y//' kconfig-cernvm.$(CVM_KERNEL_ARCH) > $(KERN_DIR)/.config.gzip.tmp
 	echo CONFIG_KERNEL_GZIP=y >> $(KERN_DIR)/.config.gzip.tmp
 	mv $(KERN_DIR)/.config.gzip.tmp $(KERN_DIR)/.config.gzip
 
-$(KERN_DIR)/.config.xz: kconfig-cernvm $(BUILD)/linux-unpacked
-	cp kconfig-cernvm $(KERN_DIR)/.config.xz
+$(KERN_DIR)/.config.xz: kconfig-cernvm.$(CVM_KERNEL_ARCH) $(BUILD)/linux-unpacked
+	cp kconfig-cernvm.$(CVM_KERNEL_ARCH) $(KERN_DIR)/.config.xz
 
-$(KERN_DIR)/arch/x86/boot/bzImage.gzip: $(KERN_DIR)/.config.gzip $(BUILD)/linux-built
+$(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).gzip: $(KERN_DIR)/.config.gzip $(BUILD)/linux-built
 	cp $(KERN_DIR)/.config.gzip $(KERN_DIR)/.config
 	$(MAKE) -C $(KERN_DIR) olddefconfig
 	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
-	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.gzip
+	mv $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE) \
+	  $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).gzip
 
-$(KERN_DIR)/arch/x86/boot/bzImage.xz: $(KERN_DIR)/.config.xz $(BUILD)/linux-patched
+$(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz: $(KERN_DIR)/.config.xz $(BUILD)/linux-patched
 	cp $(KERN_DIR)/.config.xz $(KERN_DIR)/.config
 	$(MAKE) -C $(KERN_DIR) olddefconfig
 	$(MAKE) -C $(KERN_DIR) LOCALVERSION=$(CVM_KERNEL_LOCALVERSION)
-	mv $(KERN_DIR)/arch/x86/boot/bzImage $(KERN_DIR)/arch/x86/boot/bzImage.xz
+	mv $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE) \
+	  $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz
 
 $(BUILD)/depmod-built: $(BUILD)/vbox-built $(BUILD)/afs-built $(BUILD)/vmtools-built
 	/sbin/depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
@@ -120,7 +147,7 @@ $(BUILD)/headers-built: $(BUILD)/linux-built
 	$(MAKE) -C $(KERN_DIR) INSTALL_HDR_PATH=$(BUILD)/headers-$(LINUX_VERSION) headers_install
 	touch $(BUILD)/headers-built
 
-$(BUILD)/linux-built: $(KERN_DIR)/arch/x86/boot/bzImage.xz
+$(BUILD)/linux-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz
 	touch $(BUILD)/linux-built
 
 $(BUILD)/linux-unpacked: $(SRC)/$(LINUX_TARBALL) | $(BUILD)
@@ -218,7 +245,7 @@ $(BUILD)/vbox-built: \
 	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
 	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc/
-	touch $(BUILD)/vbox-built 
+	touch $(BUILD)/vbox-built
 
 $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	mkdir -p $(BUILD)/vbox-$(VBOX_VERSION)
@@ -229,7 +256,7 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	cd $(BUILD)/vbox-$(VBOX_VERSION) && ./VBoxLinuxAdditions.run --tar xvf
 	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxLinuxAdditions.run
 	cd $(BUILD)/vbox-$(VBOX_VERSION) && tar xvfj VBoxGuestAdditions-amd64.tar.bz2
-	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2		
+	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2
 	touch $(BUILD)/vbox-unpacked
 
 $(BUILD)/vmtools-built: \

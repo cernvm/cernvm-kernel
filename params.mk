@@ -1,3 +1,21 @@
+CVM_KERNEL_ARCH = $(shell uname -m)
+CVM_KERNEL_RELEASE = $(shell cat release)
+CVM_KERNEL_LOCALVERSION = -$(CVM_KERNEL_RELEASE).cernvm.$(CVM_KERNEL_ARCH)
+CVM_KERNEL_VERSION = $(LINUX_VERSION)$(CVM_KERNEL_LOCALVERSION)
+
+ifeq ($(CVM_KERNEL_ARCH),ppcle64)
+  KERN_ARCH_FAMILY = powerpc
+  KERN_IMAGE = zImage
+else
+  KERN_ARCH_FAMILY = x86
+  KERN_IMAGE = bzImage
+endif
+
+DIST = $(TOP)/dist
+BUILD = $(TOP)/build-$(CVM_KERNEL_VERSION)
+SRC = $(TOP)/src-$(CVM_KERNEL_VERSION)
+KERN_DIR = $(BUILD)/linux-$(LINUX_VERSION)
+
 LINUX_VERSION = 4.1.20
 LINUX_TARBALL = linux-$(LINUX_VERSION).tar.xz
 LINUX_URL = https://www.kernel.org/pub/linux/kernel/v4.x/$(LINUX_TARBALL)
@@ -16,13 +34,3 @@ VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)
 VMTOOLS_VERSION = 10.0.0-3000743
 VMTOOLS_TARBALL = open-vm-tools-$(VMTOOLS_VERSION).tar.gz
 VMTOOLS_URL = https://ecsft.cern.ch/dist/cernvm/$(VMTOOLS_TARBALL)
-
-CVM_KERNEL_ARCH = x86_64
-CVM_KERNEL_RELEASE = $(shell cat release)
-CVM_KERNEL_LOCALVERSION = -$(CVM_KERNEL_RELEASE).cernvm.$(CVM_KERNEL_ARCH)
-CVM_KERNEL_VERSION = $(LINUX_VERSION)$(CVM_KERNEL_LOCALVERSION)
-
-DIST = $(TOP)/dist
-BUILD = $(TOP)/build-$(CVM_KERNEL_VERSION)
-SRC = $(TOP)/src-$(CVM_KERNEL_VERSION)
-KERN_DIR = $(BUILD)/linux-$(LINUX_VERSION)

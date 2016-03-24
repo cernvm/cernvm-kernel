@@ -18,6 +18,12 @@
 TOP = $(shell pwd)
 include params.mk
 
+ifeq ($(CVM_KERNEL_ARCH),ppcle64)
+  CVM_GUEST_MODULES =
+else
+  CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vmtools-built
+endif
+
 all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
 
 install-buildreqs:
@@ -135,7 +141,7 @@ $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz: $(KERN_DIR)/.config.
 	mv $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE) \
 	  $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz
 
-$(BUILD)/depmod-built: $(BUILD)/vbox-built $(BUILD)/afs-built $(BUILD)/vmtools-built
+$(BUILD)/depmod-built: $(BUILD)/afs-built $(CVM_GUEST_MODULES)
 	/sbin/depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/depmod-built
 

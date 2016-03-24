@@ -21,7 +21,7 @@ include params.mk
 ifeq ($(CVM_KERNEL_ARCH),ppc64le)
   CVM_GUEST_MODULES =
 else
-  CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vmtools-built
+  CVM_GUEST_MODULES = $(BUILD)/afs-built $(BUILD)/vbox-built $(BUILD)/vmtools-built
 endif
 
 all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
@@ -141,7 +141,7 @@ $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz: $(KERN_DIR)/.config.
 	mv $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE) \
 	  $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz
 
-$(BUILD)/depmod-built: $(BUILD)/afs-built $(CVM_GUEST_MODULES)
+$(BUILD)/depmod-built: $(BUILD)/modules-built $(CVM_GUEST_MODULES)
 	/sbin/depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/depmod-built
 

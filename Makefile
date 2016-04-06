@@ -26,6 +26,13 @@ endif
 
 all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
 
+help:
+	@$(MAKE) --print-data-base --question no-such-target 2>&1 | \
+	  grep -v -e '^no-such-target' -e '^Makefile' |      \
+	  awk '/^[^.%][-A-Za-z0-9_]*:/                       \
+	  { print substr($$1, 1, length($$1)-1) }' |    \
+	  sort
+
 install-buildreqs:
 	sudo yum -y install \
 	  autoconf \

@@ -96,8 +96,9 @@ $(BUILD)/afs-built: \
 	touch $(BUILD)/afs-built
 
 $(BUILD)/afs-patched: $(BUILD)/afs-unpacked
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1.patch
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1.patch
+	# Not necessary anymore for 1.6.17 (was only necessary for 1.6.11)
+	# cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1.patch
+	# cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1.patch
 	touch $(BUILD)/afs-patched
 
 $(BUILD)/afs-unpacked: $(SRC)/$(AFS_TARBALL) | $(BUILD)

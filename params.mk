@@ -11,6 +11,10 @@ ifeq ($(CVM_KERNEL_ARCH),x86_64)
   KERN_ARCH_FAMILY = x86
   KERN_IMAGE = bzImage
 endif
+ifeq ($(CVM_KERNEL_ARCH),i686)
+  KERN_ARCH_FAMILY = x86
+  KERN_IMAGE = bzImage
+endif
 ifeq ($(CVM_KERNEL_ARCH),aarch64)
   KERN_ARCH_FAMILY = arm64
   KERN_IMAGE = Image

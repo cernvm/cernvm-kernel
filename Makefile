@@ -23,6 +23,9 @@ CVM_GUEST_MODULES =
 ifeq ($(CVM_KERNEL_ARCH),x86_64)
   CVM_GUEST_MODULES = $(BUILD)/afs-built $(BUILD)/vbox-built $(BUILD)/vmtools-built
 endif
+ifeq ($(CVM_KERNEL_ARCH),i686)
+  CVM_GUEST_MODULES = $(BUILD)/vbox-built
+endif
 
 all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
 

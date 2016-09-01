@@ -21,7 +21,7 @@ BUILD = $(TOP)/build-$(CVM_KERNEL_VERSION)
 SRC = $(TOP)/src-$(CVM_KERNEL_VERSION)
 KERN_DIR = $(BUILD)/linux-$(LINUX_VERSION)
 
-LINUX_VERSION = 4.1.24
+LINUX_VERSION = 4.1.31
 LINUX_TARBALL = linux-$(LINUX_VERSION).tar.xz
 LINUX_URL = https://www.kernel.org/pub/linux/kernel/v4.x/$(LINUX_TARBALL)
 

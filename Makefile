@@ -121,6 +121,8 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
+	# TODO(jblomer): with 4.1.35 and later, we should be able to remove this again
+	cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/k002-dirty-cow.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-mmap.patch
@@ -128,8 +130,6 @@ $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cp $(SRC)/aufs/Documentation/ABI/testing/* $(KERN_DIR)/Documentation/ABI/testing/
 	cp -r $(SRC)/aufs/Documentation/filesystems/aufs $(KERN_DIR)/Documentation/filesystems/
 	cp -r $(SRC)/aufs/fs/aufs $(KERN_DIR)/fs/
-	# TODO(jblomer): with 4.1.35 and later, we should be able to remove this again
-	cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/dcow001.patch
 	touch $(BUILD)/linux-patched
 
 $(KERN_DIR)/.config.gzip: kconfig-cernvm.$(CVM_KERNEL_ARCH) $(BUILD)/linux-unpacked

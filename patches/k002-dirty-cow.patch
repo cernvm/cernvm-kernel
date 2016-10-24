@@ -42,10 +42,8 @@ diff --git a/include/linux/mm.h b/include/linux/mm.h
 index e9caec6..ed85879 100644
 --- a/include/linux/mm.h
 +++ b/include/linux/mm.h
-@@ -2232,6 +2232,7 @@ static inline struct page *follow_page(struct vm_area_struct *vma,
+@@ -2232,4 +2232,5 @@ static inline struct page *follow_page(struct vm_area_struct *vma,
  #define FOLL_TRIED	0x800	/* a retry, previous pass started an IO */
- #define FOLL_MLOCK	0x1000	/* lock present pages */
- #define FOLL_REMOTE	0x2000	/* we are working on non-current tsk/mm */
 +#define FOLL_COW	0x4000	/* internal GUP flag */
  
  typedef int (*pte_fn_t)(pte_t *pte, pgtable_t token, unsigned long addr,

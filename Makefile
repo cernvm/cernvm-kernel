@@ -128,6 +128,8 @@ $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cp $(SRC)/aufs/Documentation/ABI/testing/* $(KERN_DIR)/Documentation/ABI/testing/
 	cp -r $(SRC)/aufs/Documentation/filesystems/aufs $(KERN_DIR)/Documentation/filesystems/
 	cp -r $(SRC)/aufs/fs/aufs $(KERN_DIR)/fs/
+	# TODO(jblomer): with 4.1.35 and later, we should be able to remove this again
+	cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/dcow001.patch
 	touch $(BUILD)/linux-patched
 
 $(KERN_DIR)/.config.gzip: kconfig-cernvm.$(CVM_KERNEL_ARCH) $(BUILD)/linux-unpacked

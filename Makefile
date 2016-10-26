@@ -121,8 +121,8 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
-	# TODO(jblomer): with 4.1.35 and later, we should be able to remove this again
-	cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/k002-dirty-cow.patch
+	# As of 4.1.35 built-in
+	# cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/k002-dirty-cow.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-mmap.patch

@@ -5,6 +5,7 @@
 #   - OpenAFS
 #   - VirtualBox Guest Additions
 #   - vmhgfs from open-vm-tools (which need to be patched)
+#   - Amazon ENA network driver
 #
 # Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
 #
@@ -21,7 +22,7 @@ include params.mk
 # Leave guest modules empty (for x86_64 or aarch64) unless powerpc
 CVM_GUEST_MODULES =
 ifeq ($(CVM_KERNEL_ARCH),x86_64)
-  CVM_GUEST_MODULES = $(BUILD)/afs-built $(BUILD)/vbox-built $(BUILD)/vmtools-built
+  CVM_GUEST_MODULES = $(BUILD)/afs-built $(BUILD)/vbox-built $(BUILD)/vmtools-built $(BUILD)/ena-built
 endif
 ifeq ($(CVM_KERNEL_ARCH),i686)
   CVM_GUEST_MODULES = $(BUILD)/vbox-built
@@ -119,6 +120,27 @@ $(BUILD)/aufs-cloned: | $(BUILD)
 $(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).gzip
 	touch $(BUILD)/awskernel-built
 
+$(BUILD)/ena-patched: | $(BUILD)/ena-cloned
+	git clone $(SRC)/ena $(BUILD)/ena
+	sed -e 's,/lib/modules/$$(BUILD_KERNEL)/build,$(KERN_DIR),' -i Makefile
+	touch $(BUILD)/ena-cloned
+
+$(BUILD)/ena-built: \
+  $(BUILD)/kernel/linux/ena/ena.ko \
+  $(BUILD)/modules-built
+	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/drivers/net
+	cp $(BUILD)/kernel/linux/ena/ena.ko \
+	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/drivers/net/ena.ko
+	touch $(BUILD)
+
+$(BUILD)/ena-cloned: | $(BUILD)
+	if [ -d $(SRC)/ena ]; then \
+	  cd $(SRC)/ena && git pull; \
+	else \
+	  git clone -b $(ENA_BRANCH) $(ENA_GIT) $(SRC)/ena; \
+	fi
+	touch $(BUILD)/ena-cloned
+
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
 	# As of 4.1.35 built-in
@@ -157,6 +179,9 @@ $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz: $(KERN_DIR)/.config.
 $(BUILD)/depmod-built: $(BUILD)/modules-built $(CVM_GUEST_MODULES)
 	/sbin/depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/depmod-built
+
+$(BUILD)/ena/kernel/linux/ena/ena.ko: $(BUILD)/ena-patched $(BUILD)/linux-built
+	$(MAKE) -C $(BUILD)/ena/kernel/linux/ena
 
 $(BUILD)/firmware-built: $(BUILD)/linux-built
 	$(MAKE) -C $(KERN_DIR) INSTALL_FW_PATH=$(BUILD)/firmware-$(LINUX_VERSION) firmware_install

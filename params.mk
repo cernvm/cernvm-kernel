@@ -36,6 +36,9 @@ AFS_URL = http://www.openafs.org/dl/openafs/$(AFS_VERSION)/$(AFS_TARBALL)
 AUFS_BRANCH = aufs4.1
 AUFS_GIT = https://github.com/cernvm/aufs4-standalone.git
 
+ENA_BRANCH = master
+ENA_GIT = https://github.com/cernvm/amzn-drivers.git
+
 VBOX_VERSION = 4.3.28
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso
 VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)

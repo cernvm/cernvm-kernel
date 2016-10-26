@@ -122,14 +122,15 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE
 
 $(BUILD)/ena-patched: | $(BUILD)/ena-cloned
 	git clone $(SRC)/ena $(BUILD)/ena
-	sed -e 's,/lib/modules/$$(BUILD_KERNEL)/build,$(KERN_DIR),' -i Makefile
-	touch $(BUILD)/ena-cloned
+	sed -e 's,/lib/modules/$$(BUILD_KERNEL)/build,$(KERN_DIR),' -i \
+	  $(BUILD)/ena/kernel/linux/ena/Makefile
+	touch $(BUILD)/ena-patched
 
 $(BUILD)/ena-built: \
-  $(BUILD)/kernel/linux/ena/ena.ko \
+  $(BUILD)/ena/kernel/linux/ena/ena.ko \
   $(BUILD)/modules-built
 	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/drivers/net
-	cp $(BUILD)/kernel/linux/ena/ena.ko \
+	cp $(BUILD)/ena/kernel/linux/ena/ena.ko \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/drivers/net/ena.ko
 	touch $(BUILD)
 

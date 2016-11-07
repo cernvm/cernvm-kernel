@@ -333,7 +333,7 @@ $(BUILD)/vbox51-unpacked: $(SRC)/$(VBOX51_ISO) | $(BUILD)
 	cp $(SRC)/$(VBOX51_ISO) $(BUILD)/vbox51-$(VBOX51_VERSION)/
 	cd $(BUILD)/vbox51-$(VBOX51_VERSION) && 7z x $(VBOX51_ISO)
 	rm -f $(BUILD)/vbox51-$(VBOX51_VERSION)/$(VBOX51_ISO)
-	chmod +x $(BUILD)/vbox51-$(VBOX51_VERSION)/VBoxLinuxAddtions.run
+	chmod +x $(BUILD)/vbox51-$(VBOX51_VERSION)/VBoxLinuxAdditions.run
 	cd $(BUILD)/vbox51-$(VBOX51_VERSION) && ./VBoxLinuxAdditions.run --tar xvf
 	rm -f $(BUILD)/vbox51-$(VBOX51_VERSION)/VBoxLinuxAdditions.run
 	cd $(BUILD)/vbox51-$(VBOX51_VERSION) && tar xvfj VBoxGuestAdditions-amd64.tar.bz2

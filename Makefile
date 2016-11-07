@@ -289,7 +289,7 @@ $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
 
 $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox51-$(VBO51X_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
+	$(MAKE) -C $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
 	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko
 
 $(BUILD)/vbox-built: \

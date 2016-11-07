@@ -43,6 +43,10 @@ VBOX_VERSION = 4.3.28
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso
 VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)
 
+VBOX51_VERSION = 5.1.18
+VBOX51_ISO = VBoxGuestAdditions_$(VBOX51_VERSION).iso
+VBOX51_URL = https://ecsft.cern.ch/dist/cernvm/$(VBOX51.ISO)
+
 VMTOOLS_VERSION = 10.0.0-3000743
 VMTOOLS_TARBALL = open-vm-tools-$(VMTOOLS_VERSION).tar.gz
 VMTOOLS_URL = https://ecsft.cern.ch/dist/cernvm/$(VMTOOLS_TARBALL)

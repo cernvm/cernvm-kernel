@@ -274,21 +274,21 @@ $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/li
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
 
-$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
 	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko
 
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)
 
-$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)
 	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko
 
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
 
-$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
 	$(MAKE) -C $(BUILD)/vbox51-$(VBO51X_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
 	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko
 

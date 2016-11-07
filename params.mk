@@ -43,7 +43,7 @@ VBOX_VERSION = 4.3.28
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso
 VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)
 
-VBOX51_VERSION = 5.1.18
+VBOX51_VERSION = 5.1.8
 VBOX51_ISO = VBoxGuestAdditions_$(VBOX51_VERSION).iso
 VBOX51_URL = https://ecsft.cern.ch/dist/cernvm/$(VBOX51.ISO)
 

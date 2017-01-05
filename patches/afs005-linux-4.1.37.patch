@@ -1,0 +1,13 @@
+--- src/config/afsconfig.h.in.orig	2017-01-05 14:49:03.678380029 +0100
++++ src/config/afsconfig.h.in	2017-01-05 14:49:55.311609962 +0100
+@@ -423,6 +423,9 @@
+ /* Define if your kernel has the set_nlink function */
+ #undef HAVE_LINUX_SET_NLINK
+ 
++/* Define if your kernel has the setattr_prepare function */
++#undef HAVE_LINUX_SETATTR_PREPARE
++
+ /* Define if your kernel has the sock_create_kern function */
+ #undef HAVE_LINUX_SOCK_CREATE_KERN
+ 
+

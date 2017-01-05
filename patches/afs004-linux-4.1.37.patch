@@ -1,0 +1,13 @@
+--- acinclude.m4.orig	2017-01-05 13:23:20.856542366 +0100
++++ acinclude.m4	2017-01-05 13:23:59.854489257 +0100
+@@ -997,6 +997,9 @@
+ 		 AC_CHECK_LINUX_FUNC([set_nlink],
+ 				     [#include <linux/fs.h>],
+ 				     [set_nlink(NULL, 1);])
++		 AC_CHECK_LINUX_FUNC([setattr_prepare],
++                                     [#include <linux/fs.h>],
++                                     [setattr_prepare(NULL, NULL);])
+ 		 AC_CHECK_LINUX_FUNC([sock_create_kern],
+ 				     [#include <linux/net.h>],
+ 				     [sock_create_kern(0, 0, 0, NULL);])
+

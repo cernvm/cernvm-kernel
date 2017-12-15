@@ -29,15 +29,8 @@ LINUX_VERSION = 4.14.6
 LINUX_TARBALL = linux-$(LINUX_VERSION).tar.xz
 LINUX_URL = https://www.kernel.org/pub/linux/kernel/v4.x/$(LINUX_TARBALL)
 
-AFS_VERSION = 1.6.17
-AFS_TARBALL = openafs-$(AFS_VERSION)-src.tar.bz2
-AFS_URL = http://www.openafs.org/dl/openafs/$(AFS_VERSION)/$(AFS_TARBALL)
-
-AUFS_BRANCH = aufs4.1
+AUFS_BRANCH = aufs4.14
 AUFS_GIT = https://github.com/cernvm/aufs4-standalone.git
-
-ENA_BRANCH = master
-ENA_GIT = https://github.com/cernvm/amzn-drivers.git
 
 VBOX_VERSION = 4.3.28
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso

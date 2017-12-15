@@ -22,7 +22,7 @@ include params.mk
 # Leave guest modules empty (for x86_64 or aarch64) unless powerpc
 CVM_GUEST_MODULES =
 ifeq ($(CVM_KERNEL_ARCH),x86_64)
-  CVM_GUEST_MODULES = $(BUILD)/afs-built $(BUILD)/vbox-built $(BUILD)/vbox51-built $(BUILD)/vmtools-built $(BUILD)/ena-built
+  CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vbox51-built $(BUILD)/vmtools-built $(BUILD)/ena-built
 endif
 ifeq ($(CVM_KERNEL_ARCH),i686)
   CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vbox51-built
@@ -90,29 +90,6 @@ $(DIST):
 	mkdir -p $(DIST)
 
 
-$(BUILD)/afs-built: \
-  $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko \
-  $(BUILD)/modules-built
-	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs
-	cp $(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko \
-	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs/openafs-$(AFS_VERSION).ko
-	ln -s openafs-$(AFS_VERSION).ko $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/kernel/fs/openafs/openafs.ko
-	touch $(BUILD)/afs-built
-
-$(BUILD)/afs-patched: $(BUILD)/afs-unpacked
-	# Not necessary anymore for 1.6.17 (was only necessary for 1.6.11)
-	# cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs001-linux-4.1.patch
-	# cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs002-linux-4.1.patch
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p1 < $(TOP)/patches/afs003-linux-4.1.37.patch
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p0 < $(TOP)/patches/afs004-linux-4.1.37.patch
-	cd $(BUILD)/openafs-$(AFS_VERSION) && patch -p0 < $(TOP)/patches/afs005-linux-4.1.37.patch
-	cd $(BUILD)/openafs-$(AFS_VERSION) && autoconf && autoconf -o configure-libafs configure-libafs.ac
-	touch $(BUILD)/afs-patched
-
-$(BUILD)/afs-unpacked: $(SRC)/$(AFS_TARBALL) | $(BUILD)
-	cd $(BUILD) && tar xvfj $(SRC)/$(AFS_TARBALL)
-	touch $(BUILD)/afs-unpacked
-
 $(BUILD)/aufs-cloned: | $(BUILD)
 	if [ -d $(SRC)/aufs ]; then \
 	  cd $(SRC)/aufs && git pull; \
@@ -148,8 +125,6 @@ $(BUILD)/ena-cloned: | $(BUILD)
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
 	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
-	# As of 4.1.35 built-in
-	# cd $(KERN_DIR) && patch -p1 < $(TOP)/patches/k002-dirty-cow.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-mmap.patch
@@ -210,12 +185,6 @@ $(BUILD)/modules-built: $(BUILD)/linux-built
 	ln -s build $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/source
 	ln -s /usr/src/kernels/$(CVM_KERNEL_VERSION) $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/build
 	touch $(BUILD)/modules-built
-
-$(BUILD)/openafs-$(AFS_VERSION)/Makefile: $(BUILD)/afs-patched $(BUILD)/linux-built
-	cd $(BUILD)/openafs-$(AFS_VERSION) && ./configure --with-linux-kernel-packaging --with-linux-kernel-headers=$(KERN_DIR)
-
-$(BUILD)/openafs-$(AFS_VERSION)/src/libafs/MODLOAD-$(CVM_KERNEL_VERSION)-SP/openafs.ko: $(BUILD)/openafs-$(AFS_VERSION)/Makefile
-	$(MAKE) -C $(BUILD)/openafs-$(AFS_VERSION)
 
 $(BUILD)/vmtools-patched: $(BUILD)/vmtools-unpacked
 	cd $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION) && patch -p0 < $(TOP)/patches/vmtools001-force-vmhgfs.patch

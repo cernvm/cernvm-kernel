@@ -5,7 +5,6 @@
 #   - OpenAFS
 #   - VirtualBox Guest Additions
 #   - vmhgfs from open-vm-tools (which need to be patched)
-#   - Amazon ENA network driver
 #
 # Amazon EC2 only supports gzip'd kernel, thus build both xz and gzip images.
 #
@@ -22,10 +21,10 @@ include params.mk
 # Leave guest modules empty (for x86_64 or aarch64) unless powerpc
 CVM_GUEST_MODULES =
 ifeq ($(CVM_KERNEL_ARCH),x86_64)
-  CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vbox51-built $(BUILD)/vmtools-built
+  CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vmtools-built
 endif
 ifeq ($(CVM_KERNEL_ARCH),i686)
-  CVM_GUEST_MODULES = $(BUILD)/vbox-built $(BUILD)/vbox51-built
+  CVM_GUEST_MODULES = $(BUILD)/vbox-built
 endif
 
 all: $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz
@@ -64,7 +63,6 @@ $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz: \
   $(BUILD)/linux-built \
   $(BUILD)/awskernel-built \
   $(BUILD)/modules-built \
-  $(BUILD)/firmware-built \
   $(BUILD)/headers-built \
   $(BUILD)/depmod-built \
   | $(DIST)
@@ -75,7 +73,6 @@ $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz: \
 	  $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/vmlinuz-$(CVM_KERNEL_VERSION).gzip
 	cp -av $(BUILD)/modules-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/modules-$(LINUX_VERSION)
 	cp -av $(BUILD)/headers-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/headers-$(LINUX_VERSION)
-	cp -av $(BUILD)/firmware-$(LINUX_VERSION) $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)/firmware-$(LINUX_VERSION)
 	cd $(DIST) && tar cfvz cernvm-kernel-$(CVM_KERNEL_VERSION).tar.gz cernvm-kernel-$(CVM_KERNEL_VERSION)
 	rm -rf $(DIST)/cernvm-kernel-$(CVM_KERNEL_VERSION)
 
@@ -102,7 +99,7 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE
 	touch $(BUILD)/awskernel-built
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
-	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
+	# cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-mmap.patch
@@ -137,10 +134,6 @@ $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE).xz: $(KERN_DIR)/.config.
 $(BUILD)/depmod-built: $(BUILD)/modules-built $(CVM_GUEST_MODULES)
 	/sbin/depmod -a -b $(BUILD)/modules-$(LINUX_VERSION) $(CVM_KERNEL_VERSION)
 	touch $(BUILD)/depmod-built
-
-$(BUILD)/firmware-built: $(BUILD)/linux-built
-	$(MAKE) -C $(KERN_DIR) INSTALL_FW_PATH=$(BUILD)/firmware-$(LINUX_VERSION) firmware_install
-	touch $(BUILD)/firmware-built
 
 $(BUILD)/headers-built: $(BUILD)/linux-built
 	$(MAKE) -C $(KERN_DIR) INSTALL_HDR_PATH=$(BUILD)/headers-$(LINUX_VERSION) headers_install
@@ -220,49 +213,20 @@ $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/li
 	$(MAKE) -C $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules
 
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
-
-$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)
-	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko
+	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)/build KERN_VER=$(CVM_KERNEL_VERSION)
 
 $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)
-
-$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)
-	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko
-
-$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
-
-$(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko: $(BUILD)/vbox51-unpacked $(BUILD)/linux-built
-	$(MAKE) -C $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo KERN_DIR=$(KERN_DIR)
-	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo.ko $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko
+	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)/build KERN_VER=$(CVM_KERNEL_VERSION)
 
 $(BUILD)/vbox-built: \
   $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko \
   $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
-  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
   $(BUILD)/modules-built
 	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc
 	cp $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko \
 	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko \
-	  $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxvideo/vboxvideo.ko \
 	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc/
 	touch $(BUILD)/vbox-built
-
-$(BUILD)/vbox51-built: \
-  $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko \
-  $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko \
-  $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko \
-  $(BUILD)/modules-built
-	mkdir -p $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc
-	cp $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxguest/vboxguest51.ko \
-	  $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxsf/vboxsf51.ko \
-	  $(BUILD)/vbox51-$(VBOX51_VERSION)/src/vboxguest-$(VBOX51_VERSION)/vboxvideo/vboxvideo51.ko \
-	  $(BUILD)/modules-$(LINUX_VERSION)/lib/modules/$(CVM_KERNEL_VERSION)/misc/
-	touch $(BUILD)/vbox51-built
 
 $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	mkdir -p $(BUILD)/vbox-$(VBOX_VERSION)
@@ -275,18 +239,6 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	cd $(BUILD)/vbox-$(VBOX_VERSION) && tar xvfj VBoxGuestAdditions-amd64.tar.bz2
 	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2
 	touch $(BUILD)/vbox-unpacked
-
-$(BUILD)/vbox51-unpacked: $(SRC)/$(VBOX51_ISO) | $(BUILD)
-	mkdir -p $(BUILD)/vbox51-$(VBOX51_VERSION)
-	cp $(SRC)/$(VBOX51_ISO) $(BUILD)/vbox51-$(VBOX51_VERSION)/
-	cd $(BUILD)/vbox51-$(VBOX51_VERSION) && 7z x $(VBOX51_ISO)
-	rm -f $(BUILD)/vbox51-$(VBOX51_VERSION)/$(VBOX51_ISO)
-	chmod +x $(BUILD)/vbox51-$(VBOX51_VERSION)/VBoxLinuxAdditions.run
-	cd $(BUILD)/vbox51-$(VBOX51_VERSION) && ./VBoxLinuxAdditions.run --tar xvf
-	rm -f $(BUILD)/vbox51-$(VBOX51_VERSION)/VBoxLinuxAdditions.run
-	cd $(BUILD)/vbox51-$(VBOX51_VERSION) && tar xvfj VBoxGuestAdditions-amd64.tar.bz2
-	rm -f $(BUILD)/vbox51-$(VBOX51_VERSION)/VBoxGuestAdditions-amd64.tar.bz2
-	touch $(BUILD)/vbox51-unpacked
 
 $(BUILD)/vmtools-built: \
   $(BUILD)/open-vm-tools-open-vm-tools-$(VMTOOLS_VERSION)/open-vm-tools/modules/linux/vmhgfs/vmhgfs.ko \

@@ -99,7 +99,7 @@ $(BUILD)/awskernel-built: $(KERN_DIR)/arch/$(KERN_ARCH_FAMILY)/boot/$(KERN_IMAGE
 	touch $(BUILD)/awskernel-built
 
 $(BUILD)/linux-patched: $(BUILD)/aufs-cloned $(BUILD)/linux-unpacked
-	# cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
+	cd $(KERN_DIR) && patch -p0 < $(TOP)/patches/k001-restore-proc-acpi-events.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-kbuild.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-base.patch
 	cd $(KERN_DIR) && patch -p1 < $(SRC)/aufs/aufs4-mmap.patch
@@ -157,10 +157,10 @@ $(BUILD)/modules-built: $(BUILD)/linux-built
 $(KERN_DIR)/build: $(BUILD)/linux-unpacked
 	ln -sf . $(KERN_DIR)/build
 
-$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest/vboxguest.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built $(KERN_DIR)/build
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxguest KERN_DIR=$(KERN_DIR)/build KERN_VER=$(CVM_KERNEL_VERSION)
 
-$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built
+$(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf/vboxsf.ko: $(BUILD)/vbox-unpacked $(BUILD)/linux-built $(KERN_DIR)/build
 	$(MAKE) -C $(BUILD)/vbox-$(VBOX_VERSION)/src/vboxguest-$(VBOX_VERSION)/vboxsf KERN_DIR=$(KERN_DIR)/build KERN_VER=$(CVM_KERNEL_VERSION)
 
 $(BUILD)/vbox-built: \

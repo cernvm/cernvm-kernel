@@ -35,7 +35,3 @@ AUFS_GIT = https://github.com/cernvm/aufs4-standalone.git
 VBOX_VERSION = 5.2.2
 VBOX_ISO = VBoxGuestAdditions_$(VBOX_VERSION).iso
 VBOX_URL = http://download.virtualbox.org/virtualbox/$(VBOX_VERSION)/$(VBOX_ISO)
-
-VMTOOLS_VERSION = 10.0.0-3000743
-VMTOOLS_TARBALL = open-vm-tools-$(VMTOOLS_VERSION).tar.gz
-VMTOOLS_URL = https://ecsft.cern.ch/dist/cernvm/$(VMTOOLS_TARBALL)

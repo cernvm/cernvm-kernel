@@ -185,20 +185,11 @@ $(BUILD)/vbox-unpacked: $(SRC)/$(VBOX_ISO) | $(BUILD)
 	rm -f $(BUILD)/vbox-$(VBOX_VERSION)/VBoxGuestAdditions-amd64.tar.bz2
 	touch $(BUILD)/vbox-unpacked
 
-$(SRC)/$(AFS_TARBALL): | $(SRC)
-	curl -L -o $(SRC)/$(AFS_TARBALL) $(AFS_URL)
-
 $(SRC)/$(LINUX_TARBALL): | $(SRC)
 	curl -L -o $(SRC)/$(LINUX_TARBALL) $(LINUX_URL)
 
 $(SRC)/$(VBOX_ISO): | $(SRC)
 	curl -L -o $(SRC)/$(VBOX_ISO) $(VBOX_URL)
-
-$(SRC)/$(VBOX51_ISO): | $(SRC)
-	curl -L -o $(SRC)/$(VBOX51_ISO) $(VBOX51_URL)
-
-$(SRC)/$(VMTOOLS_TARBALL): | $(SRC)
-	curl -L -o $(SRC)/$(VMTOOLS_TARBALL) $(VMTOOLS_URL)
 
 clean:
 	rm -rf $(BUILD)*
